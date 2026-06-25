@@ -1,31 +1,20 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import {
-  LayoutGrid,
-  Inbox,
-  ScanLine,
-  Stamp as StampIcon,
-  Search,
-  Building2,
-  Sparkles,
-} from "lucide-react";
+import { LayoutGrid, Boxes, Building2, Database, ScrollText, Sparkles } from "lucide-react";
 import { C, MONO, SANS } from "../theme.js";
-import { BROKER, ENTRIES } from "../data/mockData.js";
-import { initials } from "../lib/format.js";
+import { useStore } from "../store/StoreContext.jsx";
 
-const reviewCount = ENTRIES.filter((e) => e.status === "review").length;
-const intakeCount = ENTRIES.filter((e) => e.status === "intake" || e.status === "classifying").length;
-
+/* Navigation is the workflow. The shipment file is the hub; the rest     */
+/* are the records and tools around it.                                   */
 const NAV = [
-  { to: "/", label: "Dashboard", icon: LayoutGrid, end: true },
-  { to: "/entries", label: "Entries", icon: Inbox, badge: ENTRIES.length },
-  { to: "/classify", label: "Classify invoice", icon: ScanLine },
-  { to: "/review", label: "Broker review", icon: StampIcon, badge: reviewCount, badgeColor: C.amber },
-  { to: "/lookup", label: "Tariff lookup", icon: Search },
-  { to: "/clients", label: "Clients", icon: Building2 },
+  { to: "/", label: "Worklist", icon: LayoutGrid, end: true },
+  { to: "/shipments", label: "Shipments", icon: Boxes },
+  { to: "/importers", label: "Importers", icon: Building2 },
+  { to: "/reference", label: "Reference data", icon: Database },
+  { to: "/audit", label: "Audit log", icon: ScrollText },
 ];
 
-function Item({ to, label, icon: Icon, end, badge, badgeColor }) {
+function Item({ to, label, icon: Icon, end, badge }) {
   return (
     <NavLink to={to} end={end} style={{ textDecoration: "none" }}>
       {({ isActive }) => (
@@ -33,42 +22,20 @@ function Item({ to, label, icon: Icon, end, badge, badgeColor }) {
           className="flex items-center justify-between"
           style={{
             gap: 10,
-            padding: "9px 12px",
+            padding: "8px 11px",
             borderRadius: 7,
             marginBottom: 2,
-            background: isActive ? "#fff" : "transparent",
+            background: isActive ? C.panel : "transparent",
             border: `1px solid ${isActive ? C.line : "transparent"}`,
-            boxShadow: isActive ? "0 1px 2px rgba(22,33,46,0.04)" : "none",
-            transition: "background .12s",
+            boxShadow: isActive ? "0 1px 2px rgba(26,35,48,0.04)" : "none",
           }}
         >
           <div className="flex items-center" style={{ gap: 10 }}>
-            <Icon size={16} color={isActive ? C.stamp : C.sub} />
-            <span
-              style={{
-                fontFamily: SANS,
-                fontSize: 13.5,
-                fontWeight: isActive ? 600 : 500,
-                color: isActive ? C.ink : C.sub,
-              }}
-            >
-              {label}
-            </span>
+            <Icon size={16} color={isActive ? C.accent : C.sub} />
+            <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: isActive ? 600 : 500, color: isActive ? C.ink : C.sub }}>{label}</span>
           </div>
           {badge != null && badge > 0 && (
-            <span
-              style={{
-                fontFamily: MONO,
-                fontSize: 10.5,
-                fontWeight: 600,
-                color: badgeColor || C.faint,
-                background: badgeColor ? `${badgeColor}1A` : "#EEF0F3",
-                borderRadius: 999,
-                padding: "1px 7px",
-                minWidth: 20,
-                textAlign: "center",
-              }}
-            >
+            <span style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 600, color: C.sub, background: C.mutedBg, borderRadius: 999, padding: "1px 7px", minWidth: 20, textAlign: "center" }}>
               {badge}
             </span>
           )}
@@ -78,11 +45,15 @@ function Item({ to, label, icon: Icon, end, badge, badgeColor }) {
   );
 }
 
-export default function Sidebar({ onOpenCopilot }) {
+export default function Sidebar({ onOpenAssistant }) {
+  const { shipments } = useStore();
+  const open = shipments.filter((s) => s.state !== "archived").length;
+  const pending = shipments.filter((s) => s.state === "pending_release_signoff").length;
+
   return (
     <aside
       style={{
-        width: 246,
+        width: 234,
         flexShrink: 0,
         background: C.paper,
         borderRight: `1px solid ${C.line}`,
@@ -91,100 +62,44 @@ export default function Sidebar({ onOpenCopilot }) {
         top: 0,
         display: "flex",
         flexDirection: "column",
-        padding: "18px 14px",
+        padding: "16px 13px",
       }}
     >
-      {/* brand */}
-      <div className="flex items-center" style={{ gap: 11, padding: "2px 4px 18px" }}>
-        <div
-          style={{
-            fontFamily: MONO,
-            fontWeight: 600,
-            fontSize: 12,
-            letterSpacing: "0.34em",
-            color: C.stamp,
-            border: `1.5px solid ${C.stamp}`,
-            padding: "5px 8px 5px 11px",
-            borderRadius: 3,
-          }}
-        >
-          MANIFEST
-        </div>
-        <div style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: "0.16em", color: C.faint, lineHeight: 1.5 }}>
-          AI CUSTOMS
-          <br />
-          WORKSPACE
-        </div>
+      <div style={{ padding: "2px 6px 16px" }}>
+        <div style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 700, color: C.ink, lineHeight: 1.25 }}>Customs brokerage</div>
+        <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.08em", color: C.faint, marginTop: 2 }}>OPERATIONS WORKSPACE</div>
       </div>
 
-      <div style={{ paddingTop: 4 }}>
-        <div style={{ padding: "0 8px 7px" }}>
-          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", color: C.faint }}>
-            OPERATIONS
-          </span>
-        </div>
+      <div>
         {NAV.map((n) => (
-          <Item key={n.to} {...n} />
+          <Item key={n.to} {...n} badge={n.to === "/shipments" ? open : undefined} />
         ))}
       </div>
 
-      {/* copilot launcher */}
       <button
-        onClick={onOpenCopilot}
+        onClick={onOpenAssistant}
         className="flex items-center"
-        style={{
-          gap: 9,
-          marginTop: 16,
-          padding: "10px 12px",
-          borderRadius: 8,
-          border: `1px solid ${C.line}`,
-          background: "linear-gradient(180deg,#FFFFFF, #FBFAF6)",
-          cursor: "pointer",
-          width: "100%",
-          textAlign: "left",
-        }}
+        style={{ gap: 9, marginTop: 14, padding: "9px 11px", borderRadius: 8, border: `1px solid ${C.line}`, background: C.panel, cursor: "pointer", width: "100%", textAlign: "left" }}
       >
-        <Sparkles size={15} color={C.stamp} />
+        <Sparkles size={15} color={C.accent} />
         <div>
-          <div style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: C.ink }}>Ask Manifest</div>
-          <div style={{ fontFamily: MONO, fontSize: 9.5, color: C.faint, letterSpacing: "0.04em" }}>
-            AI classification copilot
-          </div>
+          <div style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: C.ink }}>Assistant</div>
+          <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, letterSpacing: "0.03em" }}>proposes · cites · never files</div>
         </div>
       </button>
 
       <div style={{ flex: 1 }} />
 
-      {/* broker badge */}
-      <div
-        className="flex items-center"
-        style={{ gap: 10, padding: "10px 8px", borderTop: `1px solid ${C.line}`, marginTop: 12 }}
-      >
-        <div
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 999,
-            background: C.stampSoft,
-            color: C.stamp,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: MONO,
-            fontSize: 11,
-            fontWeight: 600,
-            flexShrink: 0,
-          }}
-        >
-          {initials(BROKER.name)}
-        </div>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 600, color: C.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {BROKER.name}
+      {pending > 0 && (
+        <NavLink to="/shipments?state=pending_release_signoff" style={{ textDecoration: "none" }}>
+          <div style={{ background: C.warnBg, border: `1px solid ${C.warnLine}`, borderRadius: 8, padding: "9px 11px" }}>
+            <div style={{ fontFamily: MONO, fontSize: 9.5, color: C.warn, letterSpacing: "0.06em" }}>AWAITING SIGN-OFF</div>
+            <div style={{ fontSize: 12, color: C.ink, marginTop: 3 }}>
+              {pending} file{pending === 1 ? "" : "s"} need a licensed broker
+            </div>
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 9.5, color: C.faint }}>{BROKER.licence}</div>
-        </div>
-      </div>
+        </NavLink>
+      )}
     </aside>
   );
 }

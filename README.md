@@ -1,70 +1,122 @@
-# Manifest — AI Customs Brokerage Workspace
+# Customs brokerage operations workspace
 
-An internal-tool prototype for a customs brokerage: an AI-native workspace where a
-licensed broker drives commercial invoices from intake through classification to a
-filed customs entry. It grows out of the original **Manifest** invoice-classifier
-prototype into a full operations interface.
+An internal web application for a licensed Canadian customs brokerage. The users
+are the brokerage's own operations staff. It carries a shipment from importer
+onboarding through release, accounting, and post-entry compliance, with an
+embedded AI assistant that drafts the heavy, regulation-heavy steps — and a
+licensed broker who stays accountable for everything filed with CBSA.
 
-> **Illustrative prototype.** Line-item extraction is real — the model reads an
-> uploaded invoice. **HS codes are produced by a mock classification engine to
-> demonstrate the workflow; they are not customs advice.** Every code is
-> *AI-proposed* and must be confirmed by a licensed broker before any entry is
-> filed. Nothing here submits to a customs authority.
+This is internal tooling, not a product: no branding, marketing, sign-up,
+pricing, or multi-tenant machinery. The interface serves legibility and speed of
+work.
 
-## What's in it
+> **Prototype scope.** Document extraction is real (the model reads an uploaded
+> invoice). Classification, valuation and assessment values come from a
+> deterministic engine grounded in **editable reference data**, clearly labelled
+> as proposed/illustrative — not customs advice. CARM/CBSA transmission runs
+> through **stubbed adapters**; nothing is sent to a government system. Every
+> regulatory value shown must be reconciled against the live CBSA sources.
 
-A workspace shell (sidebar + top bar + AI copilot) over seven views:
+## Operating principles (built in, not just documented)
 
-| View | Route | What it does |
-| --- | --- | --- |
-| **Dashboard** | `/` | Clearance desk: AI morning digest, queue stats, "needs attention" list, risk flags, activity feed. |
-| **Entries** | `/entries` | Filterable pipeline of every commercial invoice from intake → filed. |
-| **Entry detail** | `/entries/:id` | Per-entry workspace — meta, risk flags, documents, and the classification ledger with **confirm / override** per line. |
-| **Classify invoice** | `/classify` | The original intake flow. Drop a PDF/image; the model extracts each line and the engine proposes a tariff code, staged into broker review. |
-| **Broker review** | `/review` | Human-in-the-loop queue of every low-confidence line across all entries, ranked most-uncertain first. |
-| **Tariff lookup** | `/lookup` | Describe a good in plain language; get ranked candidate headings with the GRI reasoning behind each. |
-| **Clients** | `/clients`, `/clients/:id` | Importers of record with standing instructions and their entries. |
-| **Ask Manifest** | (slide-over) | A classification copilot that reasons with the same engine — classify a good, explain a code, or summarise the queue. |
+- **The broker is accountable; the tool assists.** The assistant proposes,
+  drafts, flags and computes. Release transmission, CAD submission/corrections,
+  and post-entry filings **cannot complete without sign-off authority** — an
+  explicit per-user permission, not a job title. The system never auto-transmits.
+- **Auditability is first-class.** Every material action appends to an
+  immutable, queryable log: who, what, when, prior value → new value, and reason.
+  See `/audit`.
+- **No hardcoded regulation.** Tariff treatments, duty/tax rates, exchange rates,
+  OGD/SIMA rules, and CARM timeframes are versioned, effective-dated reference
+  data (`/reference`). Engines resolve through it; a CBSA change is a data edit.
+- **Fail loudly and specifically.** Stage gates list exactly what's missing in
+  operational language and block until it's resolved (or explicitly overridden,
+  with a logged reason). Silent defaults are prohibited on anything that affects
+  a declaration.
 
-## The AI-native parts
+## The workflow spine
 
-- **Real extraction.** `Classify invoice` sends the uploaded document to the Claude
-  Messages API (vision) and parses the returned line items. Genuinely model-driven.
-- **Proposed, not decided.** Classification, confidence, and the GRI basis are
-  surfaced as *proposals*. A confidence threshold (80%) decides whether a line is
-  "cleared to stage" or routed to **broker review**. The broker confirms or
-  overrides — the human is always the last step before filing.
-- **Risk flags & digest.** Entries carry AI-style risk flags (origin breaking a
-  CUSMA claim, SIMA screening on steel, missing certificates) summarised into a
-  dashboard digest.
+Navigation is the shipment lifecycle. Each file is one canonical record moving
+through an explicit state machine:
 
-The HS classification itself is a deterministic **mock engine** (`src/lib/classify.js`)
-so the prototype runs offline and never implies a real customs decision.
+```
+Importer file → Intake → Classification → Valuation → Assessment
+→ Release → Accounting (CARM CAD) → Billing → Post-entry → Archive
+```
+
+States permit controlled backward / out-of-band transitions (reopen
+classification after a release query; open a correction years post-archive) —
+each logged with a reason. The current state determines which actions are
+available and which are blocked.
+
+### Phase 1 — what's built
+
+This is the **spine, end to end**, so a file can travel the whole path:
+
+- **Worklist** (`/`) — role-tuned home; exceptions first (awaiting sign-off,
+  blocked work, lapsing authorities/security, SIMA exposure), plus your queue
+  and recent activity.
+- **Shipments** (`/shipments`) — the pipeline; open a new file from an invoice.
+- **Shipment file** (`/shipments/:id`) — the hub. Stage rail + a single action
+  bar driven by the state machine, with stations:
+  - **Intake** — documents (6-year retention), **real AI extraction** of line
+    items with the source field quoted, and the human confirmation checkpoint.
+  - **Classification** — per-line AI proposal (HS to 10 digits, GRI path,
+    grounded treatment & duty, confidence + the deciding-spec reason when low),
+    SIMA/OGD flags, the importer **precedent library**, and accept / edit /
+    reject. Committing writes to the precedent library.
+  - **Valuation** — record the value-for-duty method.
+  - **Assessment** — duty / GST / SIMA / OGD computed from reference data with
+    each component's source cited; advisor review.
+  - **Release** — completeness validation against the stream + the broker
+    **sign-off gate** (transmits via the CARM adapter).
+  - **Accounting / Billing / Post-entry** — CAD assembly + sign-off submit,
+    client invoice, corrections — functional and shallow; deepened in later
+    phases.
+- **Importers** (`/importers`) — master records with the **release-readiness
+  checkpoints** (valid agency authority + active RPP security + CARM delegation)
+  and the precedent library.
+- **Reference data** (`/reference`) — the versioned, effective-dated datasets.
+- **Audit log** (`/audit`) — the append-only record, filterable and searchable.
+- **Assistant** — scoped to the open file; explains a classification, screens
+  SIMA/OGD, checks what's blocking, summarises value. It cites what it used and
+  never files.
+
+Later phases deepen the risk stages (full classification & valuation
+workspaces), assessment and the release board, CARM accounting and billing, then
+post-entry, compliance and analytics. The audit trail, sign-off gates and the
+"assist, don't file" contract are load-bearing from phase one.
+
+## Roles & sign-off
+
+Use the **role switcher** (top right) to act as different staff: release clerk,
+classification specialist, compliance advisor, accounting, operations manager,
+and the licensed broker who holds **sign-off authority**. Switch to a non-broker
+and the release/CAD actions are visibly gated; switch to the broker to file.
+(The default user is the broker so you can walk the whole flow.)
 
 ## Architecture
 
 ```
 src/
-  theme.js                 design tokens (colors, fonts, status vocabulary)
-  lib/
-    classify.js            mock HS engine + candidate ranking
-    format.js              money / percent / date / value helpers
-    entries.js             per-entry and workspace rollups
-  data/mockData.js         clients, entries, line items, activity, sample invoice
-  components/
-    ui.jsx                 primitives: Panel, Stat, StatusBadge, Stamp, Button…
-    ClassificationRow.jsx  one extracted line + its proposed code (shared)
-    Sidebar.jsx            nav + branding + broker badge
-    Copilot.jsx            "Ask Manifest" slide-over
-    HonestyBanner.jsx      the standing disclaimer
-  views/                   Dashboard, Entries, EntryDetail, ClassifyIntake,
-                           BrokerReview, TariffLookup, Clients
-  App.jsx                  shell + routes
+  domain/        constants (roles, states, doc types), state machine + guards, ids
+  reference/     versioned reference data + resolvers (tariff, rates, FX, SIMA, OGD, CARM)
+  adapters/      extraction (real model), carm / singleWindow / fx (stubbed)
+  store/         localStorage persistence, seed, StoreContext (mutations + audit)
+  auth/          SessionContext (current user / role), permissions
+  lib/           classify (grounded engine), shipment rollups, formatters
+  components/    ui primitives, shell (Sidebar/TopBar/Assistant), TransitionBar,
+                 StageRail, AuditTrail, LineClassification, stations/*
+  views/         Worklist, Shipments, ShipmentFile, Importers, ImporterFile,
+                 ReferenceData, AuditLog
 ```
 
-Stack: **Vite + React 18 + React Router + Tailwind CSS + lucide-react**. The visual
-language — IBM Plex Sans/Mono, a paper/ink palette, and the customs "stamp" — is
-carried from the seed component across every view.
+Persistence is a frontend store over `localStorage` behind a `load()/save()`
+seam; CARM/Single-Window/FX sit behind clean adapter interfaces. A real backend
+and live connectors drop in behind the same seams. State seeds on first load;
+clear `localStorage` (key `cbsa_workspace_v3`) to reset.
+
+Stack: **Vite + React 18 + React Router + Tailwind CSS + lucide-react**.
 
 ## Run it
 
@@ -75,9 +127,10 @@ npm run build    # production build to dist/
 npm run preview  # serve the build
 ```
 
-## Scope & honesty
+## Regulatory note
 
-This is a design/UX prototype, not a clearance system. The classification engine is
-illustrative, duty figures are mocked, and no data is transmitted to any customs
-authority. It exists to show what an AI-native brokerage desk *feels* like to
-operate while keeping the licensed broker firmly in the loop.
+CBSA, CARM, SIMA and OGD requirements are time-sensitive. The reference data was
+seeded against public CBSA sources at build time (e.g. the CAD replaced the
+legacy B3/B2 forms under CARM in Oct 2024) but is illustrative and must be
+verified against current CBSA publications before any real use. Mandatory human
+sign-off points are enforced in the build, not just described here.

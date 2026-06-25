@@ -1,9 +1,9 @@
 {
-  "name": "manifest-customs-workspace",
+  "name": "customs-brokerage-workspace",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "Manifest — an AI-native customs brokerage workspace (internal tool prototype)",
+  "description": "Internal customs brokerage operations workspace — shipment lifecycle, classification, sign-off-gated filing, and audit (prototype)",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
