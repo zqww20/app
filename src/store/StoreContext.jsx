@@ -223,6 +223,21 @@ export function StoreProvider({ children }) {
     [update]
   );
 
+  const assignShipment = useCallback(
+    (shipmentId, userId) => {
+      update((draft) => {
+        const shp = draft.shipments.find((s) => s.id === shipmentId);
+        if (!shp || shp.assigned === userId) return;
+        const prior = shp.assigned;
+        const priorName = draft.users.find((u) => u.id === prior)?.name || "Unassigned";
+        const name = draft.users.find((u) => u.id === userId)?.name || "Unassigned";
+        shp.assigned = userId || null;
+        logTo(draft, { action: AUDIT.assigned, entity: "shipment", entityId: shipmentId, field: "assigned", prior: priorName, next: userId ? name : "Unassigned", reason: userId ? `File handed off to ${name}.` : "File unassigned." });
+      });
+    },
+    [update]
+  );
+
   /* The guarded transition. Returns {ok, blockers, reason}.            */
   const transition = useCallback(
     async (shipmentId, target, opts = {}) => {
@@ -303,10 +318,11 @@ export function StoreProvider({ children }) {
       reviewAssessment,
       assembleCad,
       addNote,
+      assignShipment,
       transition,
       resetAll,
     }),
-    [doc, getShipment, getImporter, importerOf, ctxFor, createShipment, addDocument, setLines, confirmIntake, decideClassification, setValuationMethod, reviewAssessment, assembleCad, addNote, transition, resetAll]
+    [doc, getShipment, getImporter, importerOf, ctxFor, createShipment, addDocument, setLines, confirmIntake, decideClassification, setValuationMethod, reviewAssessment, assembleCad, addNote, assignShipment, transition, resetAll]
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

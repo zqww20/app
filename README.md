@@ -49,16 +49,30 @@ classification after a release query; open a correction years post-archive) —
 each logged with a reason. The current state determines which actions are
 available and which are blocked.
 
-### Phase 1 — what's built
+### Workflow-centric UX
 
-This is the **spine, end to end**, so a file can travel the whole path:
+The interface is built around how a broker actually works — a time-pressured
+queue where every file declares its **next action, who owns it, and the clock**
+(`src/lib/workflow.js` derives this from the state machine + guards):
 
-- **Worklist** (`/`) — role-tuned home; exceptions first (awaiting sign-off,
-  blocked work, lapsing authorities/security, SIMA exposure), plus your queue
-  and recent activity.
-- **Shipments** (`/shipments`) — the pipeline; open a new file from an invoice.
-- **Shipment file** (`/shipments/:id`) — the hub. Stage rail + a single action
-  bar driven by the state machine, with stations:
+- **Queue** (`/`) — the home work-inbox. Active files ranked by urgency, each row
+  leading with the single next action, an owner chip (clerk / classification /
+  compliance / accounting / **broker sign-off** / awaiting-importer) and a
+  deadline. Segments: Needs me · Awaiting sign-off · Arriving soon · Blocked ·
+  All active. Keyboard: `j`/`k` to move, `Enter` to open.
+- **Pipeline** (`/pipeline`) — a board by lifecycle stage; watch the flow and
+  spot where work is piling up.
+- **Command palette** (`⌘K` / `Ctrl K`) — jump to any file or importer, or run a
+  nav/action, from anywhere.
+- **Shipments** (`/shipments`) — the searchable record list, with a next-action
+  column; open a new file from an invoice.
+
+### The shipment file & stations
+
+- **Shipment file** (`/shipments/:id`) — the hub. Leads with a **next-action
+  hero** (the one thing to do, its owner, the deadline, and a primary CTA — or
+  the blockers if it's blocked), a **hand-off / assignment** control, then a
+  stage rail and the state-machine action bar, with stations:
   - **Intake** — documents (6-year retention), **real AI extraction** of line
     items with the source field quoted, and the human confirmation checkpoint.
   - **Classification** — per-line AI proposal (HS to 10 digits, GRI path,
@@ -104,10 +118,12 @@ src/
   adapters/      extraction (real model), carm / singleWindow / fx (stubbed)
   store/         localStorage persistence, seed, StoreContext (mutations + audit)
   auth/          SessionContext (current user / role), permissions
-  lib/           classify (grounded engine), shipment rollups, formatters
-  components/    ui primitives, shell (Sidebar/TopBar/Assistant), TransitionBar,
-                 StageRail, AuditTrail, LineClassification, stations/*
-  views/         Worklist, Shipments, ShipmentFile, Importers, ImporterFile,
+  lib/           workflow (next-action engine), classify (grounded), shipment
+                 rollups, formatters
+  components/    ui primitives, shell (Sidebar/TopBar/Assistant/CommandPalette),
+                 workflowUi (owner/deadline/assign), TransitionBar, StageRail,
+                 AuditTrail, LineClassification, stations/*
+  views/         Queue, Pipeline, Shipments, ShipmentFile, Importers, ImporterFile,
                  ReferenceData, AuditLog
 ```
 

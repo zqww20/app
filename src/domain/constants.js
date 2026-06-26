@@ -92,6 +92,7 @@ export const AUDIT = {
   release_transmitted: "release.transmitted",
   cad_submitted: "accounting.cad_submitted",
   invoice_issued: "billing.invoice_issued",
+  assigned: "work.assigned",
   override: "validation.override",
   note: "note.added",
 };

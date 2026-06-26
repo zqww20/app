@@ -1,13 +1,14 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutGrid, Boxes, Building2, Database, ScrollText, Sparkles } from "lucide-react";
+import { LayoutGrid, GitBranch, Boxes, Building2, Database, ScrollText, Sparkles } from "lucide-react";
 import { C, MONO, SANS } from "../theme.js";
 import { useStore } from "../store/StoreContext.jsx";
 
-/* Navigation is the workflow. The shipment file is the hub; the rest     */
-/* are the records and tools around it.                                   */
+/* Navigation is the workflow. Queue is where you work; the shipment file  */
+/* is the hub; the rest are the pipeline view and supporting records.      */
 const NAV = [
-  { to: "/", label: "Worklist", icon: LayoutGrid, end: true },
+  { to: "/", label: "Queue", icon: LayoutGrid, end: true },
+  { to: "/pipeline", label: "Pipeline", icon: GitBranch },
   { to: "/shipments", label: "Shipments", icon: Boxes },
   { to: "/importers", label: "Importers", icon: Building2 },
   { to: "/reference", label: "Reference data", icon: Database },

@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Truck, Plane, Ship, ChevronRight, Plus, X } from "lucide-react";
+import { Truck, Plane, Ship, ChevronRight, Plus, X, ShieldAlert } from "lucide-react";
 import { C, MONO } from "../theme.js";
 import { Panel, MonoLabel, StateBadge, PageHeader, Button } from "../components/ui.jsx";
+import { OwnerChip } from "../components/workflowUi.jsx";
 import { useStore } from "../store/StoreContext.jsx";
 import { useSession } from "../auth/SessionContext.jsx";
 import { summarize } from "../lib/shipment.js";
+import { nextAction } from "../lib/workflow.js";
 import { money0, relativeDay } from "../lib/format.js";
-import { STAGES } from "../domain/constants.js";
 
 const MODE_ICON = { Truck, Air: Plane, Ocean: Ship };
 
@@ -99,6 +100,16 @@ export default function Shipments() {
   const filter = params.get("state") || "all";
   const [creating, setCreating] = useState(false);
 
+  // opened from the command palette ("New shipment") via ?new=1
+  useEffect(() => {
+    if (params.get("new")) {
+      setCreating(true);
+      const p = new URLSearchParams(params);
+      p.delete("new");
+      setParams(p, { replace: true });
+    }
+  }, [params, setParams]);
+
   const rows = shipments.filter((s) => {
     if (filter === "all") return true;
     if (filter === "open") return s.state !== "archived";
@@ -127,12 +138,12 @@ export default function Shipments() {
       </div>
 
       <div className="flex items-center" style={{ padding: "0 16px 9px", gap: 12 }}>
-        <Head w={170}>File · Importer</Head>
+        <Head w={166}>File · Importer</Head>
         <Head flex>Supplier · Route</Head>
-        <Head w={96} right>Value (CAD)</Head>
-        <Head w={104} right>Lines</Head>
-        <Head w={150}>State</Head>
-        <Head w={66} right>ETA</Head>
+        <Head w={210}>Next action</Head>
+        <Head w={90} right>Value</Head>
+        <Head w={140}>State</Head>
+        <Head w={58} right>ETA</Head>
         <div style={{ width: 16 }} />
       </div>
 
@@ -140,11 +151,12 @@ export default function Shipments() {
         {rows.map((s, i) => {
           const imp = getImporter(s.importerId);
           const sum = summarize(s);
+          const action = nextAction(s, imp);
           const I = MODE_ICON[s.mode] || Truck;
           return (
             <Link key={s.id} to={`/shipments/${s.id}`} style={{ textDecoration: "none" }}>
               <Panel hover className="mf-row" style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", animationDelay: `${i * 35}ms` }}>
-                <div style={{ width: 170, flexShrink: 0 }}>
+                <div style={{ width: 166, flexShrink: 0 }}>
                   <div style={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 600 }}>{s.no}</div>
                   <div style={{ fontSize: 12, color: C.sub, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{imp?.legalName}</div>
                 </div>
@@ -154,17 +166,22 @@ export default function Shipments() {
                     <I size={12} /><span>{s.originCountry}</span><span style={{ color: C.line }}>→</span><span>{s.port || "—"}</span>
                   </div>
                 </div>
-                <div style={{ width: 96, textAlign: "right", flexShrink: 0, fontFamily: MONO, fontSize: 13, fontWeight: 600 }}>{sum.value > 0 ? money0(sum.value) : "—"}</div>
-                <div style={{ width: 104, textAlign: "right", flexShrink: 0, fontFamily: MONO, fontSize: 11.5 }}>
-                  {sum.lineCount === 0 ? <span style={{ color: C.faint }}>none</span> : (
+                <div style={{ width: 210, flexShrink: 0, minWidth: 0 }}>
+                  {s.state === "archived" ? (
+                    <span style={{ fontFamily: MONO, fontSize: 11, color: C.faint }}>—</span>
+                  ) : (
                     <>
-                      <span style={{ color: C.ink }}>{sum.decided}/{sum.lineCount}</span>
-                      <span style={{ color: sum.allDecided ? C.good : C.warn, marginLeft: 6 }}>{sum.allDecided ? "set" : "open"}</span>
+                      <div className="flex items-center" style={{ gap: 6 }}>
+                        {action.blocked && <ShieldAlert size={12} color={C.alert} style={{ flexShrink: 0 }} />}
+                        <span style={{ fontSize: 12.5, fontWeight: 500, color: action.blocked ? C.alert : C.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{action.label}</span>
+                      </div>
+                      <div style={{ marginTop: 4 }}><OwnerChip owner={action.owner} size="sm" /></div>
                     </>
                   )}
                 </div>
-                <div style={{ width: 150, flexShrink: 0 }}><StateBadge state={s.state} size="sm" /></div>
-                <div style={{ width: 66, textAlign: "right", flexShrink: 0, fontFamily: MONO, fontSize: 11, color: C.sub }}>{relativeDay(s.etaDate)}</div>
+                <div className="tnum" style={{ width: 90, textAlign: "right", flexShrink: 0, fontFamily: MONO, fontSize: 13, fontWeight: 600 }}>{sum.value > 0 ? money0(sum.value) : "—"}</div>
+                <div style={{ width: 140, flexShrink: 0 }}><StateBadge state={s.state} size="sm" /></div>
+                <div className="tnum" style={{ width: 58, textAlign: "right", flexShrink: 0, fontFamily: MONO, fontSize: 11, color: C.sub }}>{relativeDay(s.etaDate)}</div>
                 <ChevronRight size={16} color={C.faint} style={{ flexShrink: 0 }} />
               </Panel>
             </Link>
