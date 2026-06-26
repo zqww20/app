@@ -74,7 +74,7 @@ export default function AuditLog() {
           {rows.map((e, i) => {
             const sid = String(e.entityId).split("/")[0];
             return (
-              <div key={e.id} className="flex items-start" style={{ padding: "11px 16px", borderTop: i ? `1px solid ${C.lineSoft}` : "none", gap: 0 }}>
+              <div key={e.id} className="mf-tr flex items-start" style={{ padding: "11px 16px", borderTop: i ? `1px solid ${C.lineSoft}` : "none", gap: 0 }}>
                 <div style={{ width: 150, fontFamily: MONO, fontSize: 10.5, color: C.sub }}>
                   {new Date(e.ts).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                 </div>

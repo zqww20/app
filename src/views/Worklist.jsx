@@ -10,8 +10,8 @@ import { money0, daysFromToday, relativeDay, timeAgo, fmtDate } from "../lib/for
 
 function StatCard({ icon: Icon, label, value, tone, to }) {
   const inner = (
-    <Panel style={{ padding: "13px 15px", cursor: to ? "pointer" : "default" }}>
-      <Icon size={15} color={tone} style={{ marginBottom: 9 }} />
+    <Panel hover={!!to} style={{ padding: "14px 16px", cursor: to ? "pointer" : "default" }}>
+      <Icon size={15} color={tone} style={{ marginBottom: 10 }} />
       <Stat label={label} value={value} color={tone} />
     </Panel>
   );
@@ -79,7 +79,7 @@ export default function Worklist({ onOpenAssistant }) {
                   const sum = summarize(s);
                   return (
                     <Link key={s.id} to={`/shipments/${s.id}`} style={{ textDecoration: "none" }}>
-                      <Panel style={{ padding: "13px 15px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, cursor: "pointer" }}>
+                      <Panel hover style={{ padding: "13px 15px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, cursor: "pointer" }}>
                         <div>
                           <div className="flex items-center" style={{ gap: 9 }}>
                             <span style={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 600 }}>{s.no}</span>
@@ -111,7 +111,7 @@ export default function Worklist({ onOpenAssistant }) {
                   const imp = getImporter(s.importerId);
                   return (
                     <Link key={s.id} to={`/shipments/${s.id}`} style={{ textDecoration: "none" }}>
-                      <div className="flex" style={{ gap: 10, padding: "11px 15px", borderTop: i ? `1px solid ${C.lineSoft}` : "none", cursor: "pointer" }}>
+                      <div className="mf-tr flex" style={{ gap: 10, padding: "11px 15px", borderTop: i ? `1px solid ${C.lineSoft}` : "none", cursor: "pointer" }}>
                         <ShieldAlert size={14} color={C.alert} style={{ flexShrink: 0, marginTop: 1 }} />
                         <div>
                           <div className="flex items-center" style={{ gap: 7 }}>
@@ -141,7 +141,7 @@ export default function Worklist({ onOpenAssistant }) {
                   const imp = getImporter(s.importerId);
                   return (
                     <Link key={s.id} to={`/shipments/${s.id}`} style={{ textDecoration: "none" }}>
-                      <Panel style={{ padding: "11px 15px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer" }}>
+                      <Panel hover style={{ padding: "11px 15px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer" }}>
                         <div className="flex items-center" style={{ gap: 10 }}>
                           <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600 }}>{s.no}</span>
                           <span style={{ fontSize: 12.5, color: C.sub }}>{imp?.legalName}</span>
@@ -169,7 +169,7 @@ export default function Worklist({ onOpenAssistant }) {
               ) : (
                 watch.map((w, i) => (
                   <Link key={i} to={`/importers/${w.importer.id}`} style={{ textDecoration: "none" }}>
-                    <div className="flex" style={{ gap: 9, padding: "10px 15px", borderTop: i ? `1px solid ${C.lineSoft}` : "none", cursor: "pointer" }}>
+                    <div className="mf-tr flex" style={{ gap: 9, padding: "10px 15px", borderTop: i ? `1px solid ${C.lineSoft}` : "none", cursor: "pointer" }}>
                       <AlertTriangle size={13} color={w.kind === "missing" || w.kind === "expired" ? C.alert : C.warn} style={{ flexShrink: 0, marginTop: 1 }} />
                       <div>
                         <div style={{ fontSize: 12.5, color: C.ink, fontWeight: 500 }}>{w.importer.legalName}</div>

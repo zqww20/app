@@ -19,23 +19,26 @@ function Item({ to, label, icon: Icon, end, badge }) {
     <NavLink to={to} end={end} style={{ textDecoration: "none" }}>
       {({ isActive }) => (
         <div
-          className="flex items-center justify-between"
+          className={isActive ? undefined : "mf-nav"}
           style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
             gap: 10,
             padding: "8px 11px",
             borderRadius: 7,
             marginBottom: 2,
-            background: isActive ? C.panel : "transparent",
-            border: `1px solid ${isActive ? C.line : "transparent"}`,
-            boxShadow: isActive ? "0 1px 2px rgba(26,35,48,0.04)" : "none",
+            ...(isActive ? { background: C.accentBg } : {}),
           }}
         >
+          {isActive && <span style={{ position: "absolute", left: -13, top: 7, bottom: 7, width: 3, borderRadius: 999, background: C.accent }} />}
           <div className="flex items-center" style={{ gap: 10 }}>
-            <Icon size={16} color={isActive ? C.accent : C.sub} />
-            <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: isActive ? 600 : 500, color: isActive ? C.ink : C.sub }}>{label}</span>
+            <Icon size={16} color={isActive ? C.accent : C.sub} strokeWidth={isActive ? 2.4 : 2} />
+            <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: isActive ? 600 : 500, color: isActive ? C.accentStrong : C.sub, letterSpacing: "-0.006em" }}>{label}</span>
           </div>
           {badge != null && badge > 0 && (
-            <span style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 600, color: C.sub, background: C.mutedBg, borderRadius: 999, padding: "1px 7px", minWidth: 20, textAlign: "center" }}>
+            <span className="tnum" style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 600, color: isActive ? C.accent : C.sub, background: isActive ? "#fff" : C.mutedBg, borderRadius: 999, padding: "1px 7px", minWidth: 20, textAlign: "center" }}>
               {badge}
             </span>
           )}
@@ -53,9 +56,9 @@ export default function Sidebar({ onOpenAssistant }) {
   return (
     <aside
       style={{
-        width: 234,
+        width: 238,
         flexShrink: 0,
-        background: C.paper,
+        background: C.panel,
         borderRight: `1px solid ${C.line}`,
         height: "100vh",
         position: "sticky",
@@ -65,11 +68,25 @@ export default function Sidebar({ onOpenAssistant }) {
         padding: "16px 13px",
       }}
     >
-      <div style={{ padding: "2px 6px 16px" }}>
-        <div style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 700, color: C.ink, lineHeight: 1.25 }}>Customs brokerage</div>
-        <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.08em", color: C.faint, marginTop: 2 }}>OPERATIONS WORKSPACE</div>
+      {/* wordmark */}
+      <div className="flex items-center" style={{ gap: 10, padding: "2px 5px 16px" }}>
+        <div style={{ width: 26, height: 26, borderRadius: 7, background: C.ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <rect x="5" y="3" width="14" height="18" rx="2" stroke="#fff" strokeWidth="2" />
+            <line x1="8.5" y1="8" x2="15.5" y2="8" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+            <line x1="8.5" y1="12" x2="15.5" y2="12" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+            <line x1="8.5" y1="16" x2="13" y2="16" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </div>
+        <div>
+          <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: C.ink, lineHeight: 1.2, letterSpacing: "-0.01em" }}>Customs brokerage</div>
+          <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.07em", color: C.faint, marginTop: 1 }}>OPERATIONS WORKSPACE</div>
+        </div>
       </div>
 
+      <div style={{ padding: "0 6px 6px" }}>
+        <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 500, letterSpacing: "0.11em", color: C.faint }}>MENU</span>
+      </div>
       <div>
         {NAV.map((n) => (
           <Item key={n.to} {...n} badge={n.to === "/shipments" ? open : undefined} />
@@ -78,13 +95,15 @@ export default function Sidebar({ onOpenAssistant }) {
 
       <button
         onClick={onOpenAssistant}
-        className="flex items-center"
-        style={{ gap: 9, marginTop: 14, padding: "9px 11px", borderRadius: 8, border: `1px solid ${C.line}`, background: C.panel, cursor: "pointer", width: "100%", textAlign: "left" }}
+        className="mf-btn flex items-center"
+        style={{ gap: 9, marginTop: 14, padding: "9px 11px", borderRadius: 8, border: `1px solid ${C.line}`, background: C.panel, cursor: "pointer", width: "100%", textAlign: "left", boxShadow: "0 1px 2px rgba(20,28,38,0.04)" }}
       >
-        <Sparkles size={15} color={C.accent} />
+        <div style={{ width: 24, height: 24, borderRadius: 6, background: C.accentBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Sparkles size={14} color={C.accent} />
+        </div>
         <div>
           <div style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: C.ink }}>Assistant</div>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, letterSpacing: "0.03em" }}>proposes · cites · never files</div>
+          <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, letterSpacing: "0.02em" }}>proposes · cites · never files</div>
         </div>
       </button>
 
@@ -92,10 +111,10 @@ export default function Sidebar({ onOpenAssistant }) {
 
       {pending > 0 && (
         <NavLink to="/shipments?state=pending_release_signoff" style={{ textDecoration: "none" }}>
-          <div style={{ background: C.warnBg, border: `1px solid ${C.warnLine}`, borderRadius: 8, padding: "9px 11px" }}>
-            <div style={{ fontFamily: MONO, fontSize: 9.5, color: C.warn, letterSpacing: "0.06em" }}>AWAITING SIGN-OFF</div>
-            <div style={{ fontSize: 12, color: C.ink, marginTop: 3 }}>
-              {pending} file{pending === 1 ? "" : "s"} need a licensed broker
+          <div className="mf-hover" style={{ background: C.warnBg, border: `1px solid ${C.warnLine}`, borderRadius: 8, padding: "10px 12px" }}>
+            <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 600, color: C.warn, letterSpacing: "0.06em" }}>AWAITING SIGN-OFF</div>
+            <div style={{ fontSize: 12, color: C.ink, marginTop: 4, lineHeight: 1.4 }}>
+              <span className="tnum" style={{ fontWeight: 600 }}>{pending}</span> file{pending === 1 ? "" : "s"} need a licensed broker
             </div>
           </div>
         </NavLink>

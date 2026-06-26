@@ -117,7 +117,7 @@ export default function ImporterFile() {
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {files.map((s) => (
           <Link key={s.id} to={`/shipments/${s.id}`} style={{ textDecoration: "none" }}>
-            <Panel style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+            <Panel hover style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
               <div style={{ width: 130, flexShrink: 0 }}>
                 <div style={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 600 }}>{s.no}</div>
                 <div style={{ fontSize: 11.5, color: C.sub, marginTop: 3 }}>{relativeDay(s.etaDate)}</div>

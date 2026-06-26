@@ -1,18 +1,26 @@
 import React from "react";
 import { AlertTriangle, Lock, Info } from "lucide-react";
-import { C, MONO, toneOf } from "../theme.js";
+import { C, MONO, SHADOW, RADIUS, toneOf } from "../theme.js";
 import { stateOf } from "../domain/constants.js";
 
 /* ------------------------------------------------------------------ */
-/*  Operational primitives. Plain, dense, sentence-case. Labels name     */
-/*  what the user controls; nothing decorative.                          */
+/*  Operational primitives. Plain, dense, sentence-case. Quiet depth,    */
+/*  consistent radii, tabular figures. Labels name what the user         */
+/*  controls; nothing decorative.                                        */
 /* ------------------------------------------------------------------ */
 
-export function Panel({ children, style, className, pad, ...rest }) {
+export function Panel({ children, style, className, pad, hover, elevated, ...rest }) {
   return (
     <div
-      className={className}
-      style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 9, ...(pad ? { padding: pad } : {}), ...style }}
+      className={[hover ? "mf-hover" : "", className || ""].join(" ").trim() || undefined}
+      style={{
+        background: C.panel,
+        border: `1px solid ${C.line}`,
+        borderRadius: RADIUS.lg,
+        boxShadow: elevated ? SHADOW.md : SHADOW.xs,
+        ...(pad ? { padding: pad } : {}),
+        ...style,
+      }}
       {...rest}
     >
       {children}
@@ -22,7 +30,7 @@ export function Panel({ children, style, className, pad, ...rest }) {
 
 export function MonoLabel({ children, color, style }) {
   return (
-    <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.11em", textTransform: "uppercase", color: color || C.faint, ...style }}>
+    <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 500, letterSpacing: "0.09em", textTransform: "uppercase", color: color || C.faint, ...style }}>
       {children}
     </span>
   );
@@ -31,7 +39,7 @@ export function MonoLabel({ children, color, style }) {
 export function Stat({ label, value, color, sub }) {
   return (
     <div>
-      <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 600, color: color || C.ink, lineHeight: 1 }}>{value}</div>
+      <div className="tnum" style={{ fontFamily: MONO, fontSize: 22, fontWeight: 600, color: color || C.ink, lineHeight: 1.05, letterSpacing: "-0.01em" }}>{value}</div>
       <div style={{ fontSize: 11.5, color: C.sub, marginTop: 5 }}>{label}</div>
       {sub && <div style={{ fontSize: 10.5, color: C.faint, marginTop: 2 }}>{sub}</div>}
     </div>
@@ -42,7 +50,7 @@ export function Field({ label, value, mono, vColor, hint }) {
   return (
     <div>
       <MonoLabel>{label}</MonoLabel>
-      <div style={{ fontFamily: mono ? MONO : undefined, fontSize: 13, color: vColor || C.ink, marginTop: 4 }}>{value ?? "—"}</div>
+      <div className={mono ? "tnum" : undefined} style={{ fontFamily: mono ? MONO : undefined, fontSize: 13, color: vColor || C.ink, marginTop: 5 }}>{value ?? "—"}</div>
       {hint && <div style={{ fontSize: 11, color: C.faint, marginTop: 2 }}>{hint}</div>}
     </div>
   );
@@ -52,7 +60,7 @@ export function Meta({ k, v, vColor }) {
   return (
     <div className="flex items-center" style={{ gap: 7 }}>
       <MonoLabel>{k}</MonoLabel>
-      <span style={{ fontFamily: MONO, fontSize: 12, color: vColor || C.ink }}>{v}</span>
+      <span className="tnum" style={{ fontFamily: MONO, fontSize: 12, color: vColor || C.ink }}>{v}</span>
     </div>
   );
 }
@@ -61,12 +69,12 @@ export function Meta({ k, v, vColor }) {
 export function StateBadge({ state, size = "md" }) {
   const s = stateOf(state);
   const t = toneOf(s.tone);
-  const pad = size === "sm" ? "3px 8px" : "4px 10px";
+  const pad = size === "sm" ? "3px 9px 3px 8px" : "4px 11px 4px 9px";
   const fs = size === "sm" ? 9.5 : 10.5;
   return (
     <span
       className="inline-flex items-center"
-      style={{ gap: 6, background: t.bg, border: `1px solid ${t.line}`, color: t.color, borderRadius: 999, padding: pad, fontFamily: MONO, fontSize: fs, fontWeight: 600, letterSpacing: "0.03em", textTransform: "uppercase", whiteSpace: "nowrap" }}
+      style={{ gap: 6, background: t.bg, border: `1px solid ${t.line}`, color: t.color, borderRadius: RADIUS.pill, padding: pad, fontFamily: MONO, fontSize: fs, fontWeight: 600, letterSpacing: "0.02em", textTransform: "uppercase", whiteSpace: "nowrap" }}
     >
       <span style={{ width: 5, height: 5, borderRadius: 999, background: t.color, flexShrink: 0 }} />
       {s.label}
@@ -77,7 +85,7 @@ export function StateBadge({ state, size = "md" }) {
 export function Tag({ children, tone = "neutral", icon: Icon }) {
   const t = toneOf(tone);
   return (
-    <span className="inline-flex items-center" style={{ gap: 5, background: t.bg, border: `1px solid ${t.line}`, color: t.color, borderRadius: 999, padding: "3px 9px", fontFamily: MONO, fontSize: 10, fontWeight: 600, letterSpacing: "0.03em" }}>
+    <span className="inline-flex items-center" style={{ gap: 5, background: t.bg, border: `1px solid ${t.line}`, color: t.color, borderRadius: RADIUS.pill, padding: "3px 9px", fontFamily: MONO, fontSize: 10, fontWeight: 600, letterSpacing: "0.02em" }}>
       {Icon && <Icon size={11} color={t.color} />}
       {children}
     </span>
@@ -90,18 +98,18 @@ export function ConfidenceBar({ conf, width = 78 }) {
     <div className="flex items-center" style={{ gap: 8 }}>
       <MonoLabel>Confidence</MonoLabel>
       <div style={{ width, height: 5, background: C.lineSoft, borderRadius: 999, overflow: "hidden" }}>
-        <div style={{ width: `${Math.round(conf * 100)}%`, height: "100%", background: c }} />
+        <div style={{ width: `${Math.round(conf * 100)}%`, height: "100%", background: c, borderRadius: 999 }} />
       </div>
-      <span style={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 600, color: c }}>{Math.round(conf * 100)}%</span>
+      <span className="tnum" style={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 600, color: c }}>{Math.round(conf * 100)}%</span>
     </div>
   );
 }
 
-export function Button({ children, variant = "default", icon: Icon, style, ...rest }) {
-  const base = { display: "inline-flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 12, borderRadius: 6, padding: "8px 13px", cursor: "pointer", transition: "all .13s", border: "1px solid transparent", whiteSpace: "nowrap" };
+export function Button({ children, variant = "default", icon: Icon, style, className, ...rest }) {
+  const base = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, fontFamily: SANS_STACK, fontSize: 12.5, fontWeight: 600, borderRadius: RADIUS.sm, padding: "8px 13px", cursor: "pointer", border: "1px solid transparent", whiteSpace: "nowrap", letterSpacing: "-0.005em" };
   const variants = {
-    default: { background: C.panel, border: `1px solid ${C.line}`, color: C.ink },
-    primary: { background: C.accent, color: "#fff" },
+    default: { background: C.panel, border: `1px solid ${C.line}`, color: C.ink, boxShadow: SHADOW.xs },
+    primary: { background: C.accent, color: "#fff", boxShadow: "0 1px 2px rgba(31,91,166,0.28)" },
     ink: { background: C.ink, color: "#fff" },
     danger: { background: C.alertBg, border: `1px solid ${C.alertLine}`, color: C.alert },
     ghost: { background: "transparent", color: C.sub },
@@ -109,20 +117,21 @@ export function Button({ children, variant = "default", icon: Icon, style, ...re
   };
   const v = rest.disabled ? variants.disabled : variants[variant] || variants.default;
   return (
-    <button style={{ ...base, ...v, ...style }} {...rest}>
+    <button className={["mf-btn", className || ""].join(" ").trim()} style={{ ...base, ...v, ...style }} {...rest}>
       {Icon && <Icon size={13} />}
       {children}
     </button>
   );
 }
+const SANS_STACK = "'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 
 export function PageHeader({ eyebrow, title, sub, right }) {
   return (
-    <div className="flex items-start justify-between" style={{ gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
+    <div className="flex items-start justify-between" style={{ gap: 16, marginBottom: 22, flexWrap: "wrap" }}>
       <div>
-        {eyebrow && <MonoLabel style={{ color: C.sub }}>{eyebrow}</MonoLabel>}
-        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em", marginTop: eyebrow ? 6 : 0 }}>{title}</div>
-        {sub && <div style={{ fontSize: 13, color: C.sub, marginTop: 5, maxWidth: 660, lineHeight: 1.5 }}>{sub}</div>}
+        {eyebrow && <MonoLabel style={{ color: C.faint }}>{eyebrow}</MonoLabel>}
+        <div style={{ fontSize: 23, fontWeight: 700, letterSpacing: "-0.018em", marginTop: eyebrow ? 7 : 0, color: C.ink }}>{title}</div>
+        {sub && <div style={{ fontSize: 13.5, color: C.sub, marginTop: 6, maxWidth: 680, lineHeight: 1.55 }}>{sub}</div>}
       </div>
       {right && <div style={{ flexShrink: 0 }}>{right}</div>}
     </div>
@@ -131,9 +140,9 @@ export function PageHeader({ eyebrow, title, sub, right }) {
 
 export function EmptyState({ icon: Icon, title, children, action }) {
   return (
-    <Panel style={{ padding: "40px 26px", textAlign: "center" }}>
+    <Panel style={{ padding: "44px 26px", textAlign: "center" }}>
       {Icon && (
-        <div style={{ width: 44, height: 44, borderRadius: 999, background: C.mutedBg, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 13 }}>
+        <div style={{ width: 46, height: 46, borderRadius: RADIUS.pill, background: C.mutedBg, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
           <Icon size={19} color={C.sub} />
         </div>
       )}
@@ -149,12 +158,12 @@ export function EmptyState({ icon: Icon, title, children, action }) {
 export function Blockers({ blockers, title = "Blocked — resolve before advancing" }) {
   if (!blockers?.length) return null;
   return (
-    <div style={{ background: C.alertBg, border: `1px solid ${C.alertLine}`, borderRadius: 8, padding: "11px 13px" }}>
-      <div className="flex items-center" style={{ gap: 7, marginBottom: 7 }}>
+    <div style={{ background: C.alertBg, border: `1px solid ${C.alertLine}`, borderRadius: RADIUS.md, padding: "12px 14px" }}>
+      <div className="flex items-center" style={{ gap: 7, marginBottom: 8 }}>
         <Lock size={13} color={C.alert} />
         <MonoLabel color={C.alert}>{title}</MonoLabel>
       </div>
-      <ul style={{ margin: 0, paddingLeft: 18, color: "#5A3033", fontSize: 12.5, lineHeight: 1.55 }}>
+      <ul style={{ margin: 0, paddingLeft: 18, color: "#7A2A22", fontSize: 12.5, lineHeight: 1.55 }}>
         {blockers.map((b, i) => (
           <li key={i} style={{ marginBottom: 3 }}>{b}</li>
         ))}
@@ -166,7 +175,7 @@ export function Blockers({ blockers, title = "Blocked — resolve before advanci
 export function Callout({ tone = "info", icon: Icon = Info, title, children }) {
   const t = toneOf(tone);
   return (
-    <div className="flex" style={{ gap: 10, background: t.bg, border: `1px solid ${t.line}`, borderRadius: 8, padding: "11px 13px" }}>
+    <div className="flex" style={{ gap: 10, background: t.bg, border: `1px solid ${t.line}`, borderRadius: RADIUS.md, padding: "12px 14px" }}>
       <Icon size={14} color={t.color} style={{ flexShrink: 0, marginTop: 1 }} />
       <div>
         {title && <MonoLabel color={t.color} style={{ display: "block", marginBottom: 4 }}>{title}</MonoLabel>}

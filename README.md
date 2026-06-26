@@ -117,6 +117,9 @@ and live connectors drop in behind the same seams. State seeds on first load;
 clear `localStorage` (key `cbsa_workspace_v3`) to reset.
 
 Stack: **Vite + React 18 + React Router + Tailwind CSS + lucide-react**.
+Typography is **Public Sans** (the US government design-system typeface) for UI
+and **IBM Plex Mono** for codes and figures — both self-hosted in `public/fonts`
+(no runtime CDN dependency; works offline). Design tokens live in `src/theme.js`.
 
 ## Run it
 

@@ -33,7 +33,7 @@ export default function Importers() {
           const open = shipments.filter((s) => s.importerId === imp.id && s.state !== "archived").length;
           return (
             <Link key={imp.id} to={`/importers/${imp.id}`} style={{ textDecoration: "none" }}>
-              <Panel className="mf-row" style={{ padding: "16px 17px", cursor: "pointer", animationDelay: `${i * 45}ms`, height: "100%" }}>
+              <Panel hover className="mf-row" style={{ padding: "16px 17px", cursor: "pointer", animationDelay: `${i * 45}ms`, height: "100%" }}>
                 <div className="flex items-start justify-between" style={{ marginBottom: 13 }}>
                   <div style={{ width: 38, height: 38, borderRadius: 9, background: C.accentBg, color: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontSize: 12, fontWeight: 600 }}>
                     {initials(imp.legalName)}
